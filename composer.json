@@ -1,0 +1,29 @@
+{
+    "name": "guym4c/airtable-client",
+    "description": "PHP Airtable API client",
+    "type": "library",
+    "license": "MIT",
+    "homepage": "https://github.com/guym4c/airtable-client",
+    "keywords": ["airtable", "api", "client"],
+    "authors": [
+        {
+            "name": "Guy Mac",
+            "email": "hello@guymac.eu",
+            "role": "Developer"
+        }
+    ],
+    "minimum-stability": "stable",
+    "autoload": {
+        "psr-4": {
+            "Guym4c\\Airtable\\": "src/"
+        }
+    },
+    "require": {
+        "guzzlehttp/guzzle": "^6.3",
+        "ext-json": "*",
+        "psr/http-message": "^1.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "8"
+    }
+}
