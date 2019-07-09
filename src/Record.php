@@ -102,6 +102,14 @@ class Record {
         return preg_match('/^rec[A-Za-z0-9]{14}$/', $s) === 1;
     }
 
+    public function __isset(string $property): bool {
+        return array_key_exists($property, $this->data);
+    }
+
+    public function __unset(string $property): void {
+        unset($this->data[$property]);
+    }
+
     /**
      * @return string
      */
@@ -122,7 +130,7 @@ class Record {
     public function getData(): array {
         return $this->data;
     }
-    
+
     /**
      * @return DateTime
      */
