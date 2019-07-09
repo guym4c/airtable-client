@@ -49,10 +49,10 @@ abstract class AbstractRequest {
                 $uri));
 
         if ($uri = '')
-            $this->request->withUri(new Psr7\Uri(
+            $this->request = $this->request->withUri(new Psr7\Uri(
                 substr($this->request->getUri(), 0, -1)));
 
-        $this->request->withAddedHeader('Authorization', 'Bearer ' . $this->airtable->getKey());
+        $this->request = $this->request->withHeader('Authorization', 'Bearer ' . $this->airtable->getKey());
 
         if (!empty($query))
             $this->options['query'] = $query;
@@ -61,7 +61,7 @@ abstract class AbstractRequest {
             $this->options['json'] = $body;
 
         if ($method != 'GET')
-            $this->request->withAddedHeader('Content-Type', 'application/json');
+            $this->request = $this->request->withHeader('Content-Type', 'application/json');
     }
 
     public abstract function getResponse();
