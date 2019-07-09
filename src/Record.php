@@ -117,6 +117,13 @@ class Record {
     }
 
     /**
+     * @return array
+     */
+    public function getData(): array {
+        return $this->data;
+    }
+    
+    /**
      * @return DateTime
      */
     public function getTimestamp(): DateTime {
