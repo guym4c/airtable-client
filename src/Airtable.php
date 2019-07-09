@@ -50,15 +50,14 @@ class Airtable {
     }
 
     /**
-     * @param string $table
-     * @param string $id
-     * @param array  $data
+     * @param Record $record
      * @param bool   $destructive
      * @return Record
      * @throws AirtableApiException
      */
-    public function update(string $table, string $id, array $data, bool $destructive = false): Record {
-        return (new SingleRecordRequest($this, $table, $destructive ? 'PUT' : 'PATCH', $id, [], $data))
+    public function update(Record $record, bool $destructive = false): Record {
+        return (new SingleRecordRequest($this, $record->getTable(), $destructive ? 'PUT' : 'PATCH', $record->getId(), [],
+            ['fields' => $record->getData()]))
             ->getResponse();
     }
 
@@ -69,7 +68,7 @@ class Airtable {
      * @throws AirtableApiException
      */
     public function create(string $table, array $data): Record {
-        return (new SingleRecordRequest($this, $table, 'POST', '', [], $data))
+        return (new SingleRecordRequest($this, $table, 'POST', '', [], ['fields' => $data]))
             ->getResponse();
     }
 
