@@ -12,7 +12,7 @@ class RecordListRequest extends AbstractRequest {
     private $offset;
 
     /** @var ?Record[] */
-    private $records;
+    private $records = [];
 
     public function __construct(Airtable $airtable, string $table, array $query = []) {
         parent::__construct($airtable, $table, 'GET', '', $query, []);
@@ -46,5 +46,12 @@ class RecordListRequest extends AbstractRequest {
 
         $this->options['query']['offset'] = $this->offset;
         return $this->getResponse();
+    }
+
+    /**
+     * @return Record[]
+     */
+    public function getRecords(): array {
+        return $this->records;
     }
 }
