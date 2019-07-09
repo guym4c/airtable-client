@@ -28,7 +28,7 @@ abstract class AbstractRequest {
     protected $request;
 
     /** @var array */
-    protected $options;
+    protected $options = [];
 
     /** @var string */
     protected $table;
