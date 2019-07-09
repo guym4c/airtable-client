@@ -41,6 +41,9 @@ abstract class AbstractRequest {
         $this->airtable = $airtable;
         $this->table = $table;
 
+        $this->http = new GuzzleHttp\Client();
+        $this->throttle = new Throttle\LeakyBucket();
+
         $this->request = new Psr7\Request($method,
             sprintf('%s/%s/%s/%s',
                 Airtable::API_ENDPOINT,
