@@ -2,8 +2,9 @@
 
 namespace Guym4c\Airtable;
 
-use GuzzleHttp;
-use GuzzleHttp\Exception\GuzzleException;
+use Guym4c\Airtable\Request\DeleteRequest;
+use Guym4c\Airtable\Request\RecordListRequest;
+use Guym4c\Airtable\Request\SingleRecordRequest;
 
 class Airtable {
 
@@ -26,15 +27,61 @@ class Airtable {
      *
      * @param string $table
      * @param string $id
-     * @return Response|null
+     * @return Record
+     * @throws AirtableApiException
      */
-    public function get(string $table, string $id): ?Response {
+    public function get(string $table, string $id): Record {
+        return (new SingleRecordRequest($this, $table, 'GET', $id))
+            ->getResponse();
+    }
 
-        try {
-            return (new Request($table, 'GET', $id))->getResponse();
-        } catch (GuzzleException $e) {
-            return null;
-        }
+    /**
+     * @param string          $table
+     * @param ListFilter|null $filter
+     * @return RecordListRequest
+     * @throws AirtableApiException
+     */
+    public function list(string $table, ?ListFilter $filter = null): RecordListRequest {
+
+        return (new RecordListRequest($this, $table, empty($filter)
+                ? []
+                : $filter->jsonSerialize()))
+            ->getResponse();
+    }
+
+    /**
+     * @param string $table
+     * @param string $id
+     * @param array  $data
+     * @param bool   $destructive
+     * @return Record
+     * @throws AirtableApiException
+     */
+    public function update(string $table, string $id, array $data, bool $destructive = false): Record {
+        return (new SingleRecordRequest($this, $table, $destructive ? 'PUT' : 'PATCH', $id, [], $data))
+            ->getResponse();
+    }
+
+    /**
+     * @param string $table
+     * @param array  $data
+     * @return Record
+     * @throws AirtableApiException
+     */
+    public function create(string $table, array $data): Record {
+        return (new SingleRecordRequest($this, $table, 'POST', '', [], $data))
+            ->getResponse();
+    }
+
+    /**
+     * @param string $table
+     * @param string $id
+     * @return bool
+     * @throws AirtableApiException
+     */
+    public function delete(string $table, string $id): bool {
+        return (new DeleteRequest($this, $table, $id))
+            ->getResponse();
     }
 
     /**
