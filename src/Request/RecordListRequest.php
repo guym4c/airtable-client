@@ -25,7 +25,7 @@ class RecordListRequest extends AbstractRequest {
     public function getResponse(): self {
         $json = $this->execute();
 
-        $this->offset = $json['offset'];
+        $this->offset = $json['offset'] ?? null;
 
         $this->records = [];
         foreach ($json['records'] as $record) {
