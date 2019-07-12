@@ -81,13 +81,14 @@ abstract class AbstractRequest {
             throw AirtableApiException::fromGuzzle($e);
         }
 
-        $json = json_decode($response->getBody()->getContents(), true);
+        $responseBody = (string)$response->getBody();
+        $responseCode = $response->getStatusCode();
 
-        if ($response->getStatusCode() != StatusCode::OK) {
-            throw new AirtableApiException($json);
+        if ($responseCode !== StatusCode::OK) {
+            throw AirtableApiException::fromErrorResponse($responseCode, $responseBody);
         }
 
-        return $json;
+        return json_decode($responseBody, true);
     }
 
     protected function getRateLimitWaitTime(): int {
