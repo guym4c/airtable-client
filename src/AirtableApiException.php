@@ -14,6 +14,6 @@ class AirtableApiException extends Exception {
     }
 
     public static function fromGuzzle(GuzzleException $e): self {
-        return new self([]);
+        return new self($e->getMessage(), $e->getCode(), $e);
     }
 }
