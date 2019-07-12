@@ -84,21 +84,21 @@ class Record {
 
         // check for a Record object
         if ($value instanceof self) {
-            $this->{$property} = [$value->getId()];
+            $this->data[$property] = [$value->getId()];
         }
 
         if (is_array($value) &&
             !empty($value) &&
             $value[0] instanceof self) {
 
-            $this->{$property} = [];
+            $this->data[$property] = [];
             foreach ($value as $record) {
 
                 /** @var $record self */
-                $this->{$property}[] = $record->getId();
+                $this->data[$property][] = $record->getId();
             }
         } else {
-            $this->{$property} = $value;
+            $this->data[$property] = $value;
         }
     }
 
