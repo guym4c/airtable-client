@@ -41,8 +41,9 @@ class Record {
 
         // find if exists
         if (empty($this->data[$property]) &&
-            !array_key_exists($property, $this->data))
+            !array_key_exists($property, $this->data)) {
             return null;
+        }
 
         // retrieve from data
         $field = $this->data[$property];
@@ -53,13 +54,14 @@ class Record {
 
             if (count($field) == 1) {
                 return $this->attemptLoad($field[0], $targetTable);
-            } else {
-                $records = [];
-                foreach ($field as $recordId) {
-                    $records[] = $this->attemptLoad($recordId, $targetTable);
-                }
-                return $records;
             }
+
+            $records = [];
+            foreach ($field as $recordId) {
+                $records[] = $this->attemptLoad($recordId, $targetTable);
+            }
+
+            return $records;
         }
 
         return $field;
@@ -67,8 +69,9 @@ class Record {
 
     private function attemptLoad(string $recordId, ?string $targetTable = null) {
 
-        if (empty($targetTable))
+        if (empty($targetTable)) {
             return new Loader($this->airtable, $recordId);
+        }
 
         try {
             return $this->airtable->get($targetTable, $recordId);
@@ -80,21 +83,22 @@ class Record {
     public function __set(string $property, $value): void {
 
         // check for a Record object
-        if ($value instanceof self)
-            $this->{$property} = [$value->getId()];
+        if ($value instanceof self) {
+            $this->data[$property] = [$value->getId()];
+        }
 
         if (is_array($value) &&
             !empty($value) &&
             $value[0] instanceof self) {
 
-            $this->{$property} = [];
+            $this->data[$property] = [];
             foreach ($value as $record) {
 
                 /** @var $record self */
-                $this->{$property}[] = $record->getId();
+                $this->data[$property][] = $record->getId();
             }
         } else {
-            $this->{$property} = $value;
+            $this->data[$property] = $value;
         }
     }
 

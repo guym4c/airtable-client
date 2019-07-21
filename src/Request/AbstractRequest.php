@@ -9,7 +9,6 @@ use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Psr7;
 use Stiphle\Throttle;
 use Teapot\StatusCode;
-use Teapot\StatusCode\All;
 
 abstract class AbstractRequest {
 
@@ -51,20 +50,24 @@ abstract class AbstractRequest {
                 $this->table,
                 $uri));
 
-        if ($uri = '')
+        if ($uri = '') {
             $this->request = $this->request->withUri(new Psr7\Uri(
                 substr($this->request->getUri(), 0, -1)));
+        }
 
         $this->request = $this->request->withHeader('Authorization', 'Bearer ' . $this->airtable->getKey());
 
-        if (!empty($query))
+        if (!empty($query)) {
             $this->options['query'] = $query;
+        }
 
-        if (!empty($body))
+        if (!empty($body)) {
             $this->options['json'] = $body;
+        }
 
-        if ($method != 'GET')
+        if ($method != 'GET') {
             $this->request = $this->request->withHeader('Content-Type', 'application/json');
+        }
     }
 
     public abstract function getResponse();
@@ -81,13 +84,14 @@ abstract class AbstractRequest {
             throw AirtableApiException::fromGuzzle($e);
         }
 
-        $json = json_decode($response->getBody()->getContents(), true);
+        $responseBody = (string)$response->getBody();
+        $responseCode = $response->getStatusCode();
 
-        if ($response->getStatusCode() != StatusCode::OK) {
-            throw new AirtableApiException($json);
+        if ($responseCode !== StatusCode::OK) {
+            throw AirtableApiException::fromErrorResponse($responseCode, $responseBody);
         }
 
-        return $json;
+        return json_decode($responseBody, true);
     }
 
     protected function getRateLimitWaitTime(): int {
