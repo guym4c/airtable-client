@@ -86,8 +86,9 @@ class ListFilter implements JsonSerializable {
 
         $data = [];
 
-        if (!empty($this->formula))
+        if (!empty($this->formula)) {
             $data['filterByFormula'] = $this->formula;
+        }
 
         if (!empty($this->sorting)) {
 
@@ -100,8 +101,9 @@ class ListFilter implements JsonSerializable {
 
         foreach (array_diff(array_keys(get_object_vars($this)), ['formula', 'sorting']) as $property) {
 
-            if (!empty($this->{$property}))
+            if (!empty($this->{$property})) {
                 $data[$property] = $this->{$property};
+            }
         }
 
         return $data;

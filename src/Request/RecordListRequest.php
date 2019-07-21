@@ -41,8 +41,9 @@ class RecordListRequest extends AbstractRequest {
      */
     public function nextPage(): self {
 
-        if (empty($offset))
+        if (empty($offset)) {
             return null;
+        }
 
         $this->options['query']['offset'] = $this->offset;
         return $this->getResponse();
