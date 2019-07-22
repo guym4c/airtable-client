@@ -78,6 +78,8 @@ abstract class AbstractRequest {
      */
     protected function execute(): array {
 
+        usleep($this->getRateLimitWaitTime() * 1000);
+
         try {
             $response = $this->http->send($this->request, $this->options);
         } catch (GuzzleException $e) {
