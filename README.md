@@ -1,4 +1,4 @@
-# `airtable-client` 
+# `airtable-client`![](https://img.shields.io/packagist/dt/guym4c/airtable-client.svg) 
 
 A modern PHP API client for Airtable.
 
