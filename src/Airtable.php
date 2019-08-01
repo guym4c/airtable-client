@@ -14,12 +14,16 @@ class Airtable {
     /** @var string */
     private $baseId;
 
+    /** @var array */
+    private $filterKeys;
+
     const API_ENDPOINT = 'https://api.airtable.com/v0';
 
-    public function __construct(string $key, string $baseId) {
+    public function __construct(string $key, string $baseId, array $filterKeys = []) {
 
         $this->key = $key;
         $this->baseId = $baseId;
+        $this->filterKeys = $filterKeys;
     }
 
     /**
@@ -57,7 +61,7 @@ class Airtable {
      */
     public function update(Record $record, bool $destructive = false): Record {
         return (new SingleRecordRequest($this, $record->getTable(), $destructive ? 'PUT' : 'PATCH', $record->getId(), [],
-            ['fields' => $record->getData()]))
+            ['fields' => $this->filterRecordKeys($record->getData())]))
             ->getResponse();
     }
 
@@ -68,7 +72,8 @@ class Airtable {
      * @throws AirtableApiException
      */
     public function create(string $table, array $data): Record {
-        return (new SingleRecordRequest($this, $table, 'POST', '', [], ['fields' => $data]))
+        return (new SingleRecordRequest($this, $table, 'POST', '', [],
+            ['fields' => $this->filterRecordKeys($data)]))
             ->getResponse();
     }
 
@@ -83,6 +88,10 @@ class Airtable {
             ->getResponse();
     }
 
+    private function filterRecordKeys(array $data): array {
+        return array_diff_key($data, $this->filterKeys);
+    }
+
     /**
      * @return string
      */
@@ -95,5 +104,14 @@ class Airtable {
      */
     public function getBaseId(): string {
         return $this->baseId;
+    }
+
+    /**
+     * @param array $filterKeys
+     * @return Airtable
+     */
+    public function setFilterKeys(array $filterKeys): Airtable {
+        $this->filterKeys = $filterKeys;
+        return $this;
     }
 }
