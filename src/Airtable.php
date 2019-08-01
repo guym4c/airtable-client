@@ -48,8 +48,8 @@ class Airtable {
     public function list(string $table, ?ListFilter $filter = null): RecordListRequest {
 
         return (new RecordListRequest($this, $table, empty($filter)
-                ? []
-                : $filter->jsonSerialize()))
+            ? []
+            : $filter->jsonSerialize()))
             ->getResponse();
     }
 
@@ -61,7 +61,7 @@ class Airtable {
      */
     public function update(Record $record, bool $destructive = false): Record {
         return (new SingleRecordRequest($this, $record->getTable(), $destructive ? 'PUT' : 'PATCH', $record->getId(), [],
-            ['fields' => $this->filterRecordKeys($record->getData())]))
+            ['fields' => $this->filterRecordKeys($record->getData(), $record->getTable())]))
             ->getResponse();
     }
 
@@ -73,7 +73,7 @@ class Airtable {
      */
     public function create(string $table, array $data): Record {
         return (new SingleRecordRequest($this, $table, 'POST', '', [],
-            ['fields' => $this->filterRecordKeys($data)]))
+            ['fields' => $this->filterRecordKeys($data, $table)]))
             ->getResponse();
     }
 
@@ -88,8 +88,15 @@ class Airtable {
             ->getResponse();
     }
 
-    private function filterRecordKeys(array $data): array {
-        return array_diff_key($data, $this->filterKeys);
+    private function filterRecordKeys(array $data, string $table): array {
+
+        $results = [];
+        foreach ($data as $key => $value) {
+            if (!in_array($key, $this->filterKeys[$table])) {
+                $results[$key] = $value;
+            }
+        }
+        return $results;
     }
 
     /**
