@@ -14,16 +14,12 @@ class Airtable {
     /** @var string */
     private $baseId;
 
-    /** @var array */
-    private $filterKeys;
-
     const API_ENDPOINT = 'https://api.airtable.com/v0';
 
-    public function __construct(string $key, string $baseId, array $filterKeys = []) {
+    public function __construct(string $key, string $baseId) {
 
         $this->key = $key;
         $this->baseId = $baseId;
-        $this->filterKeys = $filterKeys;
     }
 
     /**
@@ -55,13 +51,12 @@ class Airtable {
 
     /**
      * @param Record $record
-     * @param bool   $destructive
      * @return Record
      * @throws AirtableApiException
      */
-    public function update(Record $record, bool $destructive = false): Record {
-        return (new SingleRecordRequest($this, $record->getTable(), $destructive ? 'PUT' : 'PATCH', $record->getId(), [],
-            ['fields' => $this->filterRecordKeys($record->getData(), $record->getTable())]))
+    public function update(Record $record): Record {
+        return (new SingleRecordRequest($this, $record->getTable(), 'PATCH', $record->getId(), [],
+            ['fields' => $record->getUpdatedFields()]))
             ->getResponse();
     }
 
@@ -73,7 +68,7 @@ class Airtable {
      */
     public function create(string $table, array $data): Record {
         return (new SingleRecordRequest($this, $table, 'POST', '', [],
-            ['fields' => $this->filterRecordKeys($data, $table)]))
+            ['fields' => $data]))
             ->getResponse();
     }
 
@@ -88,17 +83,6 @@ class Airtable {
             ->getResponse();
     }
 
-    private function filterRecordKeys(array $data, string $table): array {
-
-        $results = [];
-        foreach ($data as $key => $value) {
-            if (!in_array($key, $this->filterKeys[$table])) {
-                $results[$key] = $value;
-            }
-        }
-        return $results;
-    }
-
     /**
      * @return string
      */
@@ -111,14 +95,5 @@ class Airtable {
      */
     public function getBaseId(): string {
         return $this->baseId;
-    }
-
-    /**
-     * @param array $filterKeys
-     * @return Airtable
-     */
-    public function setFilterKeys(array $filterKeys): Airtable {
-        $this->filterKeys = $filterKeys;
-        return $this;
     }
 }

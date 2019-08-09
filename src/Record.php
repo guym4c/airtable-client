@@ -21,6 +21,9 @@ class Record {
     /** @var DateTime */
     private $timestamp;
 
+    /** @var string[] */
+    private $updated = [];
+
     public function __construct(Airtable $airtable, string $table, array $json) {
         $this->airtable = $airtable;
         $this->table = $table;
@@ -82,6 +85,11 @@ class Record {
 
     public function __set(string $property, $value): void {
 
+        // log
+        if (!in_array($property, $this->updated)) {
+            $this->updated[] = $property;
+        }
+
         // check for a Record object
         if ($value instanceof self) {
             $this->data[$property] = [$value->getId()];
@@ -133,6 +141,18 @@ class Record {
      */
     public function getData(): array {
         return $this->data;
+    }
+
+    /**
+     * @return array
+     */
+    public function getUpdatedFields(): array {
+        $updatedFields = [];
+
+        foreach ($this->updated as $updatedProperty) {
+            $updatedFields[$updatedProperty] = $this->data[$updatedProperty];
+        }
+        return $updatedFields;
     }
 
     /**
