@@ -25,6 +25,11 @@ class ListFilter implements JsonSerializable {
     /** @var ?string */
     private $view;
 
+    public static function constructSearch(string $field, $value): self {
+        return (new self())
+            ->setFormula("SEARCH('{$value}', {{$field}})");
+    }
+
     /**
      * @param string[] $fields
      * @return self

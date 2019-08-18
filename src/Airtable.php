@@ -2,6 +2,7 @@
 
 namespace Guym4c\Airtable;
 
+use Doctrine\Common\Cache\Cache;
 use Guym4c\Airtable\Request\DeleteRequest;
 use Guym4c\Airtable\Request\RecordListRequest;
 use Guym4c\Airtable\Request\SingleRecordRequest;
@@ -14,12 +15,24 @@ class Airtable {
     /** @var string */
     private $baseId;
 
+    /** @var ?Cache */
+    private $cache;
+
+    /** @var array caching */
+    private $cachedTables;
+
     const API_ENDPOINT = 'https://api.airtable.com/v0';
 
-    public function __construct(string $key, string $baseId) {
-
+    public function __construct(string $key, string $baseId, ?Cache $cache = null, array $cachedTables = []) {
         $this->key = $key;
         $this->baseId = $baseId;
+        $this->cache = $cache;
+
+        if (empty($cache)) {
+            $this->cachedTables = [];
+        } else {
+            $this->cachedTables = $cachedTables;
+        }
     }
 
     /**
@@ -43,9 +56,20 @@ class Airtable {
      */
     public function list(string $table, ?ListFilter $filter = null): RecordListRequest {
 
-        return (new RecordListRequest($this, $table, empty($filter)
-            ? []
-            : $filter->jsonSerialize()))
+        return (new RecordListRequest($this, $table, '', '', $filter))
+            ->getResponse();
+    }
+
+    /**
+     * @param string $table
+     * @param string $field
+     * @param        $value
+     * @return RecordListRequest
+     * @throws AirtableApiException
+     */
+    public function search(string $table, string $field, $value): RecordListRequest {
+
+        return (new RecordListRequest($this, $table, $field, $value))
             ->getResponse();
     }
 
@@ -95,5 +119,19 @@ class Airtable {
      */
     public function getBaseId(): string {
         return $this->baseId;
+    }
+
+    /**
+     * @return Cache|null
+     */
+    public function getCache(): ?Cache {
+        return $this->cache;
+    }
+
+    /**
+     * @return array
+     */
+    public function getCachedTables(): array {
+        return $this->cachedTables;
     }
 }
