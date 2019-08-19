@@ -45,17 +45,18 @@ class RecordListRequest extends AbstractRequest {
     }
 
     /**
-     * @param bool $cached
+     * @param bool $useCacheFirst
      * @return RecordListRequest
      * @throws AirtableApiException
      */
-    private function getCachedResponse(bool $cached = true): self {
+    private function getCachedResponse(bool $useCacheFirst = true): self {
 
         $cache = $this->airtable->getCache();
         $jsonIsFromCache = false;
 
+        // retrieve data
         if (!empty($cache) &&
-            $cached &&
+            $useCacheFirst &&
             $cache->contains($this->table)) {
 
             $json = $cache->fetch($this->table);
@@ -66,8 +67,9 @@ class RecordListRequest extends AbstractRequest {
 
         $this->offset = $json['offset'] ?? null;
 
+        // if can be cached
         if (!empty($cache) &&
-            in_array($this->table, $this->airtable->getCachedTables())) {
+            $this->isCachableTable()) {
 
             if (empty($this->offset) &&
                 empty($this->searchField)) {
@@ -133,11 +135,15 @@ class RecordListRequest extends AbstractRequest {
      * @param array $jsonRecords
      * @return Record[]
      */
-    public function parseJsonRecords(array $jsonRecords): array {
+    private function parseJsonRecords(array $jsonRecords): array {
         $records = [];
         foreach ($jsonRecords as $record) {
             $records[] = new Record($this->airtable, $this->table, $record);
         }
         return $records;
+    }
+
+    private function isCachableTable(): bool {
+        return in_array($this->table, $this->airtable->getCachableTables());
     }
 }

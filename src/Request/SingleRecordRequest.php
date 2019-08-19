@@ -27,8 +27,7 @@ class SingleRecordRequest extends AbstractRequest {
         if (!empty($cache) &&
             $cache->contains($this->table)) {
 
-            $records = (new RecordListRequest($this->airtable, $this->table))
-                ->getResponse()
+            $records = $this->airtable->list($this->table)
                 ->getRecords();
 
             foreach ($records as $record) {

@@ -19,19 +19,19 @@ class Airtable {
     private $cache;
 
     /** @var array caching */
-    private $cachedTables;
+    private $cachableTables;
 
     const API_ENDPOINT = 'https://api.airtable.com/v0';
 
-    public function __construct(string $key, string $baseId, ?Cache $cache = null, array $cachedTables = []) {
+    public function __construct(string $key, string $baseId, ?Cache $cache = null, array $cachableTables = []) {
         $this->key = $key;
         $this->baseId = $baseId;
         $this->cache = $cache;
 
         if (empty($cache)) {
-            $this->cachedTables = [];
+            $this->cachableTables = [];
         } else {
-            $this->cachedTables = $cachedTables;
+            $this->cachableTables = $cachableTables;
         }
     }
 
@@ -131,7 +131,7 @@ class Airtable {
     /**
      * @return array
      */
-    public function getCachedTables(): array {
-        return $this->cachedTables;
+    public function getCachableTables(): array {
+        return $this->cachableTables;
     }
 }
