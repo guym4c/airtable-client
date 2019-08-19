@@ -79,7 +79,7 @@ class Airtable {
      * @throws AirtableApiException
      */
     public function update(Record $record): Record {
-        return (new SingleRecordRequest($this, $record->getTable(), 'PATCH', $record->getId(), [],
+        return (new SingleRecordRequest($this, $record->getTable(), 'PATCH', $record->getId(),
             ['fields' => $record->getUpdatedFields()]))
             ->getResponse();
     }
@@ -91,7 +91,7 @@ class Airtable {
      * @throws AirtableApiException
      */
     public function create(string $table, array $data): Record {
-        return (new SingleRecordRequest($this, $table, 'POST', '', [],
+        return (new SingleRecordRequest($this, $table, 'POST', '',
             ['fields' => $data]))
             ->getResponse();
     }

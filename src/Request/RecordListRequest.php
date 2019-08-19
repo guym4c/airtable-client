@@ -69,7 +69,9 @@ class RecordListRequest extends AbstractRequest {
         if (!empty($cache) &&
             in_array($this->table, $this->airtable->getCachedTables())) {
 
-            if (empty($this->offset)) {
+            if (empty($this->offset) &&
+                empty($this->searchField)) {
+
                 $cache->save($this->table, $json, self::CACHE_LIFETIME);
             } else {
                 $cache->delete($this->table);

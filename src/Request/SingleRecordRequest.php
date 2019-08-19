@@ -11,8 +11,8 @@ class SingleRecordRequest extends AbstractRequest {
     /** @var string */
     private $id;
 
-    public function __construct(Airtable $airtable, string $table, string $method, string $id) {
-        parent::__construct($airtable, $table, $method, $id);
+    public function __construct(Airtable $airtable, string $table, string $method, string $id, array $body = []) {
+        parent::__construct($airtable, $table, $method, $id, [], $body);
         $this->id = $id;
     }
 
