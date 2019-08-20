@@ -71,10 +71,10 @@ class RecordListRequest extends AbstractRequest {
         if (!empty($cache) &&
             $this->isCachableTable()) {
 
-            if (empty($this->offset) &&
-                empty($this->searchField)) {
-
-                $cache->save($this->table, $json, self::CACHE_LIFETIME);
+            if (empty($this->offset)) {
+                if (empty($this->searchField)) {
+                    $cache->save($this->table, $json, self::CACHE_LIFETIME);
+                }
             } else {
                 $cache->delete($this->table);
             }
