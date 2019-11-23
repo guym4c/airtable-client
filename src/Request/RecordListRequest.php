@@ -72,19 +72,15 @@ class RecordListRequest extends AbstractRequest {
             $json = $this->execute();
         }
 
-        $this->offset = $json['offset'] ?? null;
+        $this->offsetOfNextPage = $json['offset'] ?? null;
 
         // if can be cached
         if (!empty($cache) &&
-            $this->isCachableTable()) {
+            $this->isCachableTable() &&
+            $this->isCachableRequest() &&
+            !$jsonIsFromCache) {
 
-            if (empty($this->offset)) {
-                if (empty($this->searchField)) {
-                    $cache->save($this->table, $json, self::CACHE_LIFETIME);
-                }
-            } else {
-                $cache->delete($this->table);
-            }
+            $cache->save($this->table, $json, self::CACHE_LIFETIME);
         }
 
         $this->records = $this->parseJsonRecords($json['records']);
@@ -160,5 +156,11 @@ class RecordListRequest extends AbstractRequest {
 
     private function isCachableTable(): bool {
         return in_array($this->table, $this->airtable->getCachableTables());
+    }
+
+    private function isCachableRequest(): bool {
+        return empty($this->offsetOfNextPage) &&
+            empty($this->searchField) &&
+            empty($this->filter);
     }
 }
