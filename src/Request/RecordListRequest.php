@@ -11,8 +11,8 @@ class RecordListRequest extends AbstractRequest {
 
     private const CACHE_LIFETIME = 60 * 60 * 24; // 24 hours
 
-    /** @var int */
-    private $offsetOfNextPage = 0;
+    /** @var string */
+    private $offsetOfNextPage = '';
 
     /** @var ?ListFilter */
     private $filter;
@@ -26,7 +26,7 @@ class RecordListRequest extends AbstractRequest {
     /** @var mixed */
     private $searchValue;
 
-    public function __construct(Airtable $airtable, string $table, string $searchField = '', $searchValue = '', ?ListFilter $filter = null, int $offset = 0) {
+    public function __construct(Airtable $airtable, string $table, string $searchField = '', $searchValue = '', ?ListFilter $filter = null, string $offset = '') {
         parent::__construct($airtable, $table, 'GET', '', empty($searchField)
             ? (empty($filter)
                 ? []
