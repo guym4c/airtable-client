@@ -11,8 +11,11 @@ class RecordListRequest extends AbstractRequest {
 
     private const CACHE_LIFETIME = 60 * 60 * 24; // 24 hours
 
-    /** @var ?string */
-    private $offset;
+    /** @var int */
+    private $offsetOfNextPage = 0;
+
+    /** @var ?ListFilter */
+    private $filter;
 
     /** @var ?Record[] */
     private $records = [];
@@ -23,7 +26,7 @@ class RecordListRequest extends AbstractRequest {
     /** @var mixed */
     private $searchValue;
 
-    public function __construct(Airtable $airtable, string $table, string $searchField = '', $searchValue = '', ?ListFilter $filter = null) {
+    public function __construct(Airtable $airtable, string $table, string $searchField = '', $searchValue = '', ?ListFilter $filter = null, int $offset = 0) {
         parent::__construct($airtable, $table, 'GET', '', empty($searchField)
             ? (empty($filter)
                 ? []
@@ -34,6 +37,10 @@ class RecordListRequest extends AbstractRequest {
 
         $this->searchField = $searchField;
         $this->searchValue = $searchValue;
+        $this->filter = $filter;
+
+        $this->options['query']['offset'] = $offset;
+
     }
 
     /**
@@ -96,17 +103,25 @@ class RecordListRequest extends AbstractRequest {
     }
 
     /**
-     * @return self
+     * Returns the next page of the response. If there are no further pages, returns null.
+     *
+     * @return self|null
      * @throws AirtableApiException
      */
-    public function nextPage(): self {
+    public function nextPage(): ?self {
 
-        if (empty($offset)) {
+        if (empty($this->offsetOfNextPage)) {
             return null;
         }
 
-        $this->options['query']['offset'] = $this->offset;
-        return $this->getResponse();
+        $nextPage = new self($this->airtable,
+            $this->table,
+            $this->searchField,
+            $this->searchValue,
+            $this->filter,
+            $this->offsetOfNextPage);
+
+        return $nextPage->getResponse();
     }
 
     /**
