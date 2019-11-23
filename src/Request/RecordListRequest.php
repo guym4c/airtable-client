@@ -76,7 +76,7 @@ class RecordListRequest extends AbstractRequest {
 
         // if can be cached
         if (!empty($cache) &&
-            $this->isCachableTable() &&
+            $this->airtable->isCachableTable($this->table) &&
             $this->isCachableRequest() &&
             !$jsonIsFromCache) {
 
@@ -152,10 +152,6 @@ class RecordListRequest extends AbstractRequest {
             $records[] = new Record($this->airtable, $this->table, $record);
         }
         return $records;
-    }
-
-    private function isCachableTable(): bool {
-        return in_array($this->table, $this->airtable->getCachableTables());
     }
 
     private function isCachableRequest(): bool {
