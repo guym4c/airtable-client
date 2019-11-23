@@ -134,4 +134,12 @@ class Airtable {
     public function getCachableTables(): array {
         return $this->cachableTables;
     }
+
+    /**
+     * @param string $table
+     * @return bool
+     */
+    public function isCachableTable(string $table): bool {
+        return in_array($table, $this->getCachableTables());
+    }
 }

@@ -11,8 +11,11 @@ class RecordListRequest extends AbstractRequest {
 
     private const CACHE_LIFETIME = 60 * 60 * 24; // 24 hours
 
-    /** @var ?string */
-    private $offset;
+    /** @var string */
+    private $offsetOfNextPage = '';
+
+    /** @var ?ListFilter */
+    private $filter;
 
     /** @var ?Record[] */
     private $records = [];
@@ -23,7 +26,7 @@ class RecordListRequest extends AbstractRequest {
     /** @var mixed */
     private $searchValue;
 
-    public function __construct(Airtable $airtable, string $table, string $searchField = '', $searchValue = '', ?ListFilter $filter = null) {
+    public function __construct(Airtable $airtable, string $table, string $searchField = '', $searchValue = '', ?ListFilter $filter = null, string $offset = '') {
         parent::__construct($airtable, $table, 'GET', '', empty($searchField)
             ? (empty($filter)
                 ? []
@@ -34,6 +37,10 @@ class RecordListRequest extends AbstractRequest {
 
         $this->searchField = $searchField;
         $this->searchValue = $searchValue;
+        $this->filter = $filter;
+
+        $this->options['query']['offset'] = $offset;
+
     }
 
     /**
@@ -65,19 +72,15 @@ class RecordListRequest extends AbstractRequest {
             $json = $this->execute();
         }
 
-        $this->offset = $json['offset'] ?? null;
+        $this->offsetOfNextPage = $json['offset'] ?? null;
 
         // if can be cached
         if (!empty($cache) &&
-            $this->isCachableTable()) {
+            $this->airtable->isCachableTable($this->table) &&
+            $this->isCachableRequest() &&
+            !$jsonIsFromCache) {
 
-            if (empty($this->offset)) {
-                if (empty($this->searchField)) {
-                    $cache->save($this->table, $json, self::CACHE_LIFETIME);
-                }
-            } else {
-                $cache->delete($this->table);
-            }
+            $cache->save($this->table, $json, self::CACHE_LIFETIME);
         }
 
         $this->records = $this->parseJsonRecords($json['records']);
@@ -96,17 +99,25 @@ class RecordListRequest extends AbstractRequest {
     }
 
     /**
-     * @return self
+     * Returns the next page of the response. If there are no further pages, returns null.
+     *
+     * @return self|null
      * @throws AirtableApiException
      */
-    public function nextPage(): self {
+    public function nextPage(): ?self {
 
-        if (empty($offset)) {
+        if (empty($this->offsetOfNextPage)) {
             return null;
         }
 
-        $this->options['query']['offset'] = $this->offset;
-        return $this->getResponse();
+        $nextPage = new self($this->airtable,
+            $this->table,
+            $this->searchField,
+            $this->searchValue,
+            $this->filter,
+            $this->offsetOfNextPage);
+
+        return $nextPage->getResponse();
     }
 
     /**
@@ -143,7 +154,9 @@ class RecordListRequest extends AbstractRequest {
         return $records;
     }
 
-    private function isCachableTable(): bool {
-        return in_array($this->table, $this->airtable->getCachableTables());
+    private function isCachableRequest(): bool {
+        return empty($this->offsetOfNextPage) &&
+            empty($this->searchField) &&
+            empty($this->filter);
     }
 }

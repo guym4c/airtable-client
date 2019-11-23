@@ -17,7 +17,8 @@ class SingleRecordRequest extends AbstractRequest {
     public function __construct(Airtable $airtable, string $table, string $method, string $id, array $body = []) {
         parent::__construct($airtable, $table, $method, $id, [], $body);
         $this->id = $id;
-        $this->useCache = empty($body);
+        $this->useCache = empty($body) &&
+            $airtable->isCachableTable($table);
     }
 
     /**
