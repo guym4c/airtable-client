@@ -40,7 +40,7 @@ class Record {
         return $this->get($property, $targetTable);
     }
 
-    private function get(string $property, ?string $targetTable = null) {
+    public function get(string $property, ?string $targetTable = null) {
 
         // find if exists
         if (empty($this->data[$property]) &&
