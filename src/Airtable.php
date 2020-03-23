@@ -2,7 +2,7 @@
 
 namespace Guym4c\Airtable;
 
-use Doctrine\Common\Cache\Cache;
+use Doctrine\Common\Cache\CacheProvider;
 use Guym4c\Airtable\Request\DeleteRequest;
 use Guym4c\Airtable\Request\RecordListRequest;
 use Guym4c\Airtable\Request\SingleRecordRequest;
@@ -15,7 +15,7 @@ class Airtable {
     /** @var string */
     private $baseId;
 
-    /** @var ?Cache */
+    /** @var ?CacheProvider */
     private $cache;
 
     /** @var array caching */
@@ -23,7 +23,7 @@ class Airtable {
 
     const API_ENDPOINT = 'https://api.airtable.com/v0';
 
-    public function __construct(string $key, string $baseId, ?Cache $cache = null, array $cachableTables = []) {
+    public function __construct(string $key, string $baseId, ?CacheProvider $cache = null, array $cachableTables = []) {
         $this->key = $key;
         $this->baseId = $baseId;
         $this->cache = $cache;
@@ -122,9 +122,9 @@ class Airtable {
     }
 
     /**
-     * @return Cache|null
+     * @return CacheProvider|null
      */
-    public function getCache(): ?Cache {
+    public function getCache(): ?CacheProvider {
         return $this->cache;
     }
 
@@ -141,5 +141,15 @@ class Airtable {
      */
     public function isCachableTable(string $table): bool {
         return in_array($table, $this->getCachableTables());
+    }
+
+    /**
+     * @return bool
+     */
+    public function flushCache(): bool {
+        if (!empty($this->cache)) {
+            return $this->cache->flushAll();
+        }
+        return false;
     }
 }
