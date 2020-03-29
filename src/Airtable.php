@@ -18,15 +18,35 @@ class Airtable {
     /** @var ?CacheProvider */
     private $cache;
 
-    /** @var array caching */
+    /** @var string[] */
     private $cachableTables;
 
-    const API_ENDPOINT = 'https://api.airtable.com/v0';
+    /** @var string|null */
+    private $apiEndpoint;
 
-    public function __construct(string $key, string $baseId, ?CacheProvider $cache = null, array $cachableTables = []) {
+    /** @var string[] */
+    private $headers;
+
+    /** @var bool */
+    private $isRateLimited;
+
+    const DEFAULT_API_ENDPOINT = 'https://api.airtable.com/v0';
+
+    public function __construct(
+        string $key,
+        string $baseId,
+        ?CacheProvider $cache = null,
+        array $cachableTables = [],
+        ?string $apiEndpoint = null,
+        array $headers = [],
+        bool $isRateLimited = true
+    ) {
         $this->key = $key;
         $this->baseId = $baseId;
         $this->cache = $cache;
+        $this->apiEndpoint = $apiEndpoint ?? self::DEFAULT_API_ENDPOINT;
+        $this->headers = $headers;
+        $this->isRateLimited = $isRateLimited;
 
         if (empty($cache)) {
             $this->cachableTables = [];
@@ -151,5 +171,26 @@ class Airtable {
             return $this->cache->flushAll();
         }
         return false;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getApiEndpoint(): ?string {
+        return $this->apiEndpoint;
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getHeaders(): array {
+        return $this->headers;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isRateLimited(): bool {
+        return $this->isRateLimited;
     }
 }

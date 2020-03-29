@@ -12,7 +12,7 @@ use Teapot\StatusCode;
 
 abstract class AbstractRequest {
 
-    const THROTTLER_ID = 'airtable';
+    const THROTTLER_ID = self::class;
 
     /** @var Airtable */
     protected $airtable;
@@ -45,17 +45,20 @@ abstract class AbstractRequest {
 
         $this->request = new Psr7\Request($method,
             sprintf('%s/%s/%s/%s',
-                Airtable::API_ENDPOINT,
+                $this->airtable->getApiEndpoint(),
                 $this->airtable->getBaseId(),
                 $this->table,
-                $uri));
+                $uri),
+            array_merge(
+                $this->airtable->getHeaders(),
+                ['Authorization' => "Bearer {$this->airtable->getKey()}"]
+            )
+        );
 
         if ($uri = '') {
             $this->request = $this->request->withUri(new Psr7\Uri(
                 substr($this->request->getUri(), 0, -1)));
         }
-
-        $this->request = $this->request->withHeader('Authorization', 'Bearer ' . $this->airtable->getKey());
 
         if (!empty($query)) {
             $this->options['query'] = $query;
@@ -78,7 +81,9 @@ abstract class AbstractRequest {
      */
     protected function execute(): array {
 
-        usleep($this->getRateLimitWaitTime() * 1000);
+        if ($this->airtable->isRateLimited()) {
+            usleep($this->getRateLimitWaitTime() * 1000);
+        }
 
         try {
             $response = $this->http->send($this->request, $this->options);
@@ -96,7 +101,7 @@ abstract class AbstractRequest {
         return json_decode($responseBody, true);
     }
 
-    protected function getRateLimitWaitTime(): int {
+    private function getRateLimitWaitTime(): int {
         return $this->throttle->throttle(self::THROTTLER_ID, 5, 1000);
     }
 
