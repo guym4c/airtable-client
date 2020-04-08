@@ -81,6 +81,9 @@ class Airtable {
     }
 
     /**
+     * Searches Airtable for $value in $field.
+     * @see find() for an exact match
+     *
      * @param string $table
      * @param string $field
      * @param        $value
@@ -91,6 +94,22 @@ class Airtable {
 
         return (new RecordListRequest($this, $table, $field, $value))
             ->getResponse();
+    }
+
+    /**
+     * Finds an exact match for $value in $field.
+     * @see search() for a non-exact match.
+     *
+     * @param string $table
+     * @param string $field
+     * @param        $value
+     * @return Record[]
+     * @throws AirtableApiException
+     */
+    public function find(string $table, string $field, $value): array {
+
+        return $this->search($table, $field, $value)
+            ->findRecords($field, $value, true);
     }
 
     /**

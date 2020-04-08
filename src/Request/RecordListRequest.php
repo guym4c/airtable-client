@@ -129,13 +129,17 @@ class RecordListRequest extends AbstractRequest {
 
     /**
      * @param string $field
-     * @param string $value
+     * @param mixed  $value
+     * @param bool   $exactMatch
      * @return Record[]
      */
-    public function findRecords(string $field, string $value): array {
+    public function findRecords(string $field, $value, bool $exactMatch = false): array {
         $results = [];
         foreach ($this->records as $record) {
-            if ($record->{$field} === $value) {
+            if (
+                ($exactMatch && $record->{$field} === $value)
+                || strpos($record->{$field}, $value) !== false
+            ) {
                 $results[] = $record;
             }
         }
