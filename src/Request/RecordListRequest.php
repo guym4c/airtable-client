@@ -138,7 +138,7 @@ class RecordListRequest extends AbstractRequest {
         foreach ($this->records as $record) {
             if (
                 ($exactMatch && $record->{$field} === $value)
-                || strpos($record->{$field}, $value) !== false
+                || (!$exactMatch && strpos($record->{$field}, $value) !== false)
             ) {
                 $results[] = $record;
             }
