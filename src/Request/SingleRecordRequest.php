@@ -8,17 +8,21 @@ use Guym4c\Airtable\Record;
 
 class SingleRecordRequest extends AbstractRequest {
 
-    /** @var string */
-    private $id;
+    private string $id;
 
-    /** @var bool */
-    private $useCache;
+    private bool $useCache;
 
-    public function __construct(Airtable $airtable, string $table, string $method, string $id, array $body = []) {
+    public function __construct(
+        Airtable $airtable,
+        string $table,
+        string $method,
+        string $id,
+        array $body = []
+    ) {
         parent::__construct($airtable, $table, $method, $id, [], $body);
         $this->id = $id;
-        $this->useCache = empty($body) &&
-            $airtable->isCachableTable($table);
+        $this->useCache = empty($body)
+            && $airtable->isCachableTable($table);
     }
 
     /**
@@ -27,9 +31,10 @@ class SingleRecordRequest extends AbstractRequest {
      */
     public function getResponse(): Record {
 
-        if ($this->useCache &&
-            !empty($this->airtable->getCache())) {
-
+        if (
+            $this->useCache
+            && !empty($this->airtable->getCache())
+        ) {
             $records = $this->airtable->list($this->table)
                 ->getRecords();
 

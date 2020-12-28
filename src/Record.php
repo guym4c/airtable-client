@@ -3,33 +3,36 @@
 namespace Guym4c\Airtable;
 
 use DateTime;
+use Exception;
 
 class Record {
 
-    /** @var Airtable */
-    private $airtable;
+    private Airtable $airtable;
 
-    /** @var string */
-    private $table;
+    private string $table;
 
-    /** @var string */
-    private $id;
+    private string $id;
 
-    /** @var array */
-    private $data;
+    private array $data;
 
-    /** @var DateTime */
-    private $timestamp;
+    private ?DateTime $timestamp;
 
     /** @var string[] */
-    private $updated = [];
+    private array $updated = [];
 
     public function __construct(Airtable $airtable, string $table, array $json) {
         $this->airtable = $airtable;
         $this->table = $table;
         $this->id = $json['id'];
         $this->data = $json['fields'];
-        $this->timestamp = strtotime($json['createdTime']) ?? new DateTime();
+
+        $timestamp = null;
+        try {
+            $timestamp = new DateTime($json['createdTime'] ?? 'now');
+        } catch (Exception $e) {
+            $timestamp = new DateTime();
+        }
+        $this->timestamp = $timestamp;
     }
 
     public function __get(string $property) {
@@ -43,8 +46,10 @@ class Record {
     public function get(string $property, ?string $targetTable = null) {
 
         // find if exists
-        if (empty($this->data[$property]) &&
-            !array_key_exists($property, $this->data)) {
+        if (
+            empty($this->data[$property])
+            && !array_key_exists($property, $this->data)
+        ) {
             return null;
         }
 
@@ -52,9 +57,10 @@ class Record {
         $field = $this->data[$property];
 
         // check if is relation
-        if (is_array($field) &&
-            $this->isRelation($field[0])) {
-
+        if (
+            is_array($field)
+            && $this->isRelation($field[0])
+        ) {
             if (count($field) == 1) {
                 return $this->attemptLoad($field[0], $targetTable);
             }
@@ -63,7 +69,6 @@ class Record {
             foreach ($field as $recordId) {
                 $records[] = $this->attemptLoad($recordId, $targetTable);
             }
-
             return $records;
         }
 
@@ -95,13 +100,13 @@ class Record {
             $this->data[$property] = [$value->getId()];
         }
 
-        if (is_array($value) &&
-            !empty($value) &&
-            $value[0] instanceof self) {
-
+        if (
+            is_array($value)
+            && !empty($value)
+            && $value[0] instanceof self
+        ) {
             $this->data[$property] = [];
             foreach ($value as $record) {
-
                 /** @var $record self */
                 $this->data[$property][] = $record->getId();
             }
@@ -122,30 +127,18 @@ class Record {
         unset($this->data[$property]);
     }
 
-    /**
-     * @return string
-     */
     public function getTable(): string {
         return $this->table;
     }
 
-    /**
-     * @return string
-     */
     public function getId(): string {
         return $this->id;
     }
 
-    /**
-     * @return array
-     */
     public function getData(): array {
         return $this->data;
     }
 
-    /**
-     * @return array
-     */
     public function getUpdatedFields(): array {
         $updatedFields = [];
 
@@ -155,9 +148,6 @@ class Record {
         return $updatedFields;
     }
 
-    /**
-     * @return DateTime
-     */
     public function getTimestamp(): DateTime {
         return $this->timestamp;
     }

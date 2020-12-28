@@ -7,55 +7,60 @@ use Guym4c\Airtable\AirtableApiException;
 use GuzzleHttp;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Psr7;
+use Stiphle\Storage\DoctrineCache as ThrottleStorage;
 use Stiphle\Throttle;
 use Teapot\StatusCode;
 
 abstract class AbstractRequest {
 
-    const THROTTLER_ID = self::class;
+    private const THROTTLER_ID = self::class;
 
-    /** @var Airtable */
-    protected $airtable;
+    protected Airtable $airtable;
 
-    /** @var GuzzleHttp\Client */
-    protected $http;
+    protected GuzzleHttp\Client $http;
 
-    /** @var Throttle\LeakyBucket */
-    protected $throttle;
+    protected Throttle\LeakyBucket $throttle;
 
-    /** @var Psr7\Request */
-    protected $request;
+    protected Psr7\Request $request;
 
-    /** @var array */
-    protected $options = [];
+    protected array $options = [];
 
-    /** @var string */
-    protected $table;
+    protected string $table;
 
-    /** @var bool */
-    protected $error = false;
+    protected bool $error = false;
 
-    public function __construct(Airtable $airtable, string $table, string $method, string $uri = '', array $query = [], array $body = []) {
-
+    public function __construct(
+        Airtable $airtable,
+        string $table,
+        string $method,
+        string $uri = '',
+        array $query = [],
+        array $body = []
+    ) {
         $this->airtable = $airtable;
         $this->table = $table;
 
         $this->http = new GuzzleHttp\Client();
         $this->throttle = new Throttle\LeakyBucket();
 
+        if (!empty($airtable->getCache())) {
+            $this->throttle->setStorage(new ThrottleStorage($airtable->getCache()));
+        }
+
         $this->request = new Psr7\Request($method,
-            sprintf('%s/%s/%s/%s',
+            implode('/', [
                 $this->airtable->getApiEndpoint(),
                 $this->airtable->getBaseId(),
                 $this->table,
-                $uri),
+                $uri,
+            ]),
             array_merge(
                 $this->airtable->getHeaders(),
                 ['Authorization' => "Bearer {$this->airtable->getKey()}"]
             )
         );
 
-        if ($uri = '') {
+        if ($uri === '') {
             $this->request = $this->request->withUri(new Psr7\Uri(
                 substr($this->request->getUri(), 0, -1)));
         }
@@ -69,7 +74,9 @@ abstract class AbstractRequest {
         }
 
         if ($method != 'GET') {
-            $this->request = $this->request->withHeader('Content-Type', 'application/json');
+            /** @noinspection PhpFieldAssignmentTypeMismatchInspection */
+            $this->request = $this->request
+                ->withHeader('Content-Type', 'application/json');
         }
     }
 
@@ -82,7 +89,7 @@ abstract class AbstractRequest {
     protected function execute(): array {
 
         if ($this->airtable->isRateLimited()) {
-            usleep($this->getRateLimitWaitTime() * 1000);
+            $this->wait();
         }
 
         try {
@@ -91,7 +98,7 @@ abstract class AbstractRequest {
             throw AirtableApiException::fromGuzzle($e);
         }
 
-        $responseBody = (string)$response->getBody();
+        $responseBody = (string) $response->getBody();
         $responseCode = $response->getStatusCode();
 
         if ($responseCode !== StatusCode::OK) {
@@ -101,9 +108,7 @@ abstract class AbstractRequest {
         return json_decode($responseBody, true);
     }
 
-    private function getRateLimitWaitTime(): int {
+    private function wait(): int {
         return $this->throttle->throttle(self::THROTTLER_ID, 5, 1000);
     }
-
-
 }

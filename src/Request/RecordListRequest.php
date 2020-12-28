@@ -11,36 +11,48 @@ class RecordListRequest extends AbstractRequest {
 
     private const CACHE_LIFETIME = 60 * 60 * 24; // 24 hours
 
-    /** @var string */
-    private $offsetOfNextPage = '';
+    private ?string $offsetOfNextPage = '';
 
-    /** @var ?ListFilter */
-    private $filter;
+    private ?ListFilter $filter;
 
     /** @var ?Record[] */
-    private $records = [];
+    private ?array $records = [];
 
-    /** @var string */
-    private $searchField;
+    private string $searchField;
 
-    /** @var mixed */
     private $searchValue;
 
-    public function __construct(Airtable $airtable, string $table, string $searchField = '', $searchValue = '', ?ListFilter $filter = null, string $offset = '') {
-        parent::__construct($airtable, $table, 'GET', '', empty($searchField)
-            ? (empty($filter)
-                ? []
-                : $filter->jsonSerialize())
-            : ListFilter::constructSearch($searchField, $searchValue)
-                ->jsonSerialize(),
-            []);
+    public function __construct(
+        Airtable $airtable,
+        string $table,
+        string $searchField = '',
+        $searchValue = '',
+        ?ListFilter $filter = null,
+        string $offset = ''
+    ) {
+        parent::__construct(
+            $airtable,
+            $table,
+            'GET',
+            '',
+            self::getQuery($searchField, $searchValue, $filter)
+        );
 
         $this->searchField = $searchField;
         $this->searchValue = $searchValue;
         $this->filter = $filter;
 
         $this->options['query']['offset'] = $offset;
+    }
 
+    private static function getQuery(string $searchField, $searchValue, ?ListFilter $filter): array {
+        if (empty($searchField)) {
+            return empty($filter)
+                ? []
+                : $filter->jsonSerialize();
+        }
+        return ListFilter::constructSearch($searchField, $searchValue)
+            ->jsonSerialize();
     }
 
     /**
@@ -62,10 +74,11 @@ class RecordListRequest extends AbstractRequest {
         $jsonIsFromCache = false;
 
         // retrieve data
-        if (!empty($cache) &&
-            $useCacheFirst &&
-            $cache->contains($this->table)) {
-
+        if (
+            !empty($cache)
+            && $useCacheFirst
+            && $cache->contains($this->table)
+        ) {
             $json = $cache->fetch($this->table);
             $jsonIsFromCache = true;
         } else {
@@ -75,19 +88,21 @@ class RecordListRequest extends AbstractRequest {
         $this->offsetOfNextPage = $json['offset'] ?? null;
 
         // if can be cached
-        if (!empty($cache) &&
-            $this->airtable->isCachableTable($this->table) &&
-            $this->isCachableRequest() &&
-            !$jsonIsFromCache) {
-
+        if (
+            !empty($cache)
+            && $this->airtable->isCachableTable($this->table)
+            && $this->isCachableRequest()
+            && !$jsonIsFromCache
+        ) {
             $cache->save($this->table, $json, self::CACHE_LIFETIME);
         }
 
         $this->records = $this->parseJsonRecords($json['records']);
 
-        if ($jsonIsFromCache &&
-            !empty($this->searchField)) {
-
+        if (
+            $jsonIsFromCache
+            && !empty($this->searchField)
+        ) {
             $this->records = $this->findRecords($this->searchField, $this->searchValue);
 
             if (empty($this->records)) {
@@ -137,8 +152,14 @@ class RecordListRequest extends AbstractRequest {
         $results = [];
         foreach ($this->records as $record) {
             if (
-                ($exactMatch && $record->{$field} === $value)
-                || (!$exactMatch && strpos($record->{$field}, $value) !== false)
+                (
+                    $exactMatch
+                    && $record->{$field} === $value
+                )
+                || (
+                    !$exactMatch
+                    && strpos($record->{$field}, $value) !== false
+                )
             ) {
                 $results[] = $record;
             }
@@ -159,8 +180,8 @@ class RecordListRequest extends AbstractRequest {
     }
 
     private function isCachableRequest(): bool {
-        return empty($this->offsetOfNextPage) &&
-            empty($this->searchField) &&
-            empty($this->filter);
+        return empty($this->offsetOfNextPage)
+            && empty($this->searchField)
+            && empty($this->filter);
     }
 }

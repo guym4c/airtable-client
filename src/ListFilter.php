@@ -8,22 +8,18 @@ use JsonSerializable;
 class ListFilter implements JsonSerializable {
 
     /** @var ?string[] */
-    private $fields;
+    private ?array $fields;
 
-    /** @var ?string */
-    private $formula;
+    private ?string $formula;
 
-    /** @var ?int */
-    private $maxRecords;
+    private ?int $maxRecords;
 
-    /** @var ?int */
-    private $pageSize;
+    private ?int $pageSize;
 
     /** @var ?Sort[] */
-    private $sorting;
+    private ?array $sorting;
 
-    /** @var ?string */
-    private $view;
+    private ?string $view;
 
     public static function constructSearch(string $field, $value): self {
         return (new self())

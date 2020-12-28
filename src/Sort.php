@@ -6,12 +6,15 @@ use JsonSerializable;
 
 class Sort implements JsonSerializable {
 
-    /** @var string */
-    private $field;
+    private string $field;
 
-    /** @var string */
-    private $direction;
+    private string $direction;
 
+    /**
+     * Sort constructor.
+     * @param string $field
+     * @param string $direction asc or desc
+     */
     public function __construct(string $field, string $direction = 'asc') {
         $this->field = $field;
         $this->direction = $direction;

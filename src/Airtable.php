@@ -3,34 +3,32 @@
 namespace Guym4c\Airtable;
 
 use Doctrine\Common\Cache\CacheProvider;
+use Guym4c\Airtable\Request\BatchUpdateRequest;
 use Guym4c\Airtable\Request\DeleteRequest;
+use Guym4c\Airtable\Request\BatchCreateRequest;
 use Guym4c\Airtable\Request\RecordListRequest;
 use Guym4c\Airtable\Request\SingleRecordRequest;
 
 class Airtable {
 
-    /** @var string */
-    private $key;
+    private const RECORD_BATCH_SIZE = 10;
+    private const DEFAULT_API_ENDPOINT = 'https://api.airtable.com/v0';
 
-    /** @var string */
-    private $baseId;
+    private string $key;
 
-    /** @var ?CacheProvider */
-    private $cache;
+    private string $baseId;
 
-    /** @var string[] */
-    private $cachableTables;
-
-    /** @var string|null */
-    private $apiEndpoint;
+    private ?CacheProvider $cache;
 
     /** @var string[] */
-    private $headers;
+    private array $cachableTables;
 
-    /** @var bool */
-    private $isRateLimited;
+    private ?string $apiEndpoint;
 
-    const DEFAULT_API_ENDPOINT = 'https://api.airtable.com/v0';
+    /** @var string[] */
+    private array $headers;
+
+    private bool $isRateLimited;
 
     public function __construct(
         string $key,
@@ -118,9 +116,29 @@ class Airtable {
      * @throws AirtableApiException
      */
     public function update(Record $record): Record {
+        $this->deleteCacheForTable($record->getTable());
         return (new SingleRecordRequest($this, $record->getTable(), 'PATCH', $record->getId(),
             ['fields' => $record->getUpdatedFields()]))
             ->getResponse();
+    }
+
+    /**
+     * @param string $table
+     * @param array $records
+     * @return Record[]
+     * @throws AirtableApiException
+     */
+    public function updateAll(string $table, array $records): array {
+        $this->deleteCacheForTable($table);
+        $results = [];
+        foreach (array_chunk($records, self::RECORD_BATCH_SIZE) as $chunk) {
+            $results = array_merge(
+                $results,
+                (new BatchUpdateRequest($this, $table, $chunk))
+                    ->getResponse(),
+            );
+        }
+        return $results;
     }
 
     /**
@@ -130,9 +148,29 @@ class Airtable {
      * @throws AirtableApiException
      */
     public function create(string $table, array $data): Record {
+        $this->deleteCacheForTable($table);
         return (new SingleRecordRequest($this, $table, 'POST', '',
             ['fields' => $data]))
             ->getResponse();
+    }
+
+    /**
+     * @param string $table
+     * @param array $data
+     * @return Record[]
+     * @throws AirtableApiException
+     */
+    public function createAll(string $table, array $data): array {
+        $this->deleteCacheForTable($table);
+        $results = [];
+        foreach (array_chunk($data, self::RECORD_BATCH_SIZE) as $chunk) {
+            $results = array_merge(
+                $results,
+                (new BatchCreateRequest($this, $table, $chunk))
+                    ->getResponse(),
+            );
+        }
+        return $results;
     }
 
     /**
@@ -142,8 +180,18 @@ class Airtable {
      * @throws AirtableApiException
      */
     public function delete(string $table, string $id): bool {
+        $this->deleteCacheForTable($table);
         return (new DeleteRequest($this, $table, $id))
             ->getResponse();
+    }
+
+    private function deleteCacheForTable(string $table): void {
+        if (
+            !empty($this->getCache())
+            && $this->isCachableTable($table)
+        ) {
+            $this->getCache()->delete($table);
+        }
     }
 
     /**

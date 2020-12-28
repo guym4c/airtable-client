@@ -4,11 +4,9 @@ namespace Guym4c\Airtable;
 
 class Loader {
 
-    /** @var Airtable */
-    private $airtable;
+    private Airtable $airtable;
 
-    /** @var string */
-    private $id;
+    private string $id;
 
     public function __construct(Airtable $airtable, string $id) {
         $this->airtable = $airtable;
