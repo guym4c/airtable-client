@@ -44,6 +44,9 @@ There are two filter shorthand methods: `search($table, $field, $value)` and `fi
 
 As `list()` results are paginated, `list()` returns the completed `Request` object to you. You can then either get the list of `Record`s that were fetched using `getRecords()`, or move to the next page using `nextPage()`. Bear in mind that the page pointer will eventually reset on Airtable's end.
 
+## Batch jobs
+`$airtable->createAll()` and `$airtable->updateAll()` allow requests to be batched. You can pass as many arrays and records to these methods respectively, and the client will use batch requests to create them all.
+
 ## Rate limits
 Airtable's API is rate-limited to 5 queries per second. If you exceed this limit, the client will throttle requests, blocking as it does. If this rate is exceeded on Airtable's end and you are put into the 30-second penalty box, calls to the API will raise an exception.
 
@@ -53,7 +56,7 @@ Commonly, you may have some tables within your base where data is more stagnant.
 $airtable = new \Guym4c\Airtable\Airtable($apiKey, $baseId, $cache, ['cachable_table_one', 'cachable_table_two']);
 ```
 
-The client will respond to requests that have no filters or sorts applied from the cache, and attempt to respond to `get()`, `search()` and `find()` too. You can clear the cache by calling the client's `flushCache()` method.
+The client will respond to requests that have no filters or sorts applied from the cache, and attempt to respond to `get()`, `search()` and `find()` too. You can clear the cache by calling the client's `flushCache()` method. A table's cache will also be dropped when records are created, modified or deleted by the client.
 
 Cachable tables must have less than 101 records, as the client will not cache tables that Airtable paginates.
 
